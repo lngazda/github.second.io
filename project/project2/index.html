@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Lauren Gazda" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 2: Modeling, Testing, and Predicting</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project2/">Project 2: Modeling, Testing, and Predicting</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="lauren-gazda" class="section level4">
+<h4>Lauren Gazda</h4>
+</div>
+<div id="eid-lng673" class="section level4">
+<h4>eID: lng673</h4>
+</div>
+<div id="introduction-to-the-data" class="section level2">
+<h2>Introduction to the Data</h2>
+<p>Since COVID delayed my first marathon, I chose to analyze the daily training for a marathon runner which I found in the Stat2Data package. The modified Marathon dataset I imported contains 307 observations which document a runner’s daily run from 2005-2006 with no ShoeBrand N/A entries. I will be looking at the numeric variables <code>Miles: Miles for training run</code>, <code>TimeMin: Training time (in minutes)</code>, and the <code>PaceMin: Running pace (in minutes per mile)</code>. The binary variable <code>Short</code> codes for 1=5 miles or less &amp; 0=more than 5 miles run. Finally, the categorical variable <code>ShoeBrand</code> documents if Addidas, Asics, Brooks, Izumis, Mizunos, or New Balances were worn during the run.</p>
+<pre class="r"><code>Marathon &lt;- read.csv(&quot;Marathon.csv&quot;)
+Marathon &lt;- subset (Marathon, select = -c(X, Date, Time, Pace, After2004))
+Marathon &lt;- na.omit(Marathon)
+head(Marathon)</code></pre>
+<pre><code>##   Miles ShoeBrand TimeMin PaceMin Short
+## 1     5   Addidas  41.217   8.243     1
+## 2     5   Addidas  43.517   8.703     1
+## 3     4   Addidas  34.317   8.579     1
+## 4     5   Addidas  43.983   8.797     1
+## 5     5   Addidas  43.000   8.600     1
+## 6     5   Addidas  42.633   8.527     1</code></pre>
+</div>
+<div id="manova" class="section level2">
+<h2>MANOVA</h2>
+<p>To see if the average training time, total miles, and mile pace are different across the shoe brands, I performed a One-Way MANOVA.</p>
+<ul>
+<li>Ho: Shoe brand does not have an effect on mean training time, total miles run, and mile pace</li>
+<li>Ha: Shoe brand does have an effect on mean training time, total miles run, and mile pace</li>
+</ul>
+<pre class="r"><code>#Normality and Equal Variance
+library(ggpubr)
+ggboxplot(Marathon, x = &quot;ShoeBrand&quot;, y = c(&quot;TimeMin&quot;, &quot;PaceMin&quot;, &quot;Miles&quot;), 
+  merge = TRUE, palette = &quot;jco&quot;, main = &quot;Test of Normality for all Numeric Variables&quot;) </code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-2-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#ANOVA Model
+library(car)
+multi_manova&lt;-lm(cbind(TimeMin,PaceMin,Miles) ~ ShoeBrand, data = Marathon)
+
+#Results
+Manova(multi_manova, type=3)</code></pre>
+<pre><code>##
+## Type III MANOVA Tests: Pillai test statistic
+## Df test stat approx F num Df den Df Pr(&gt;F)
+## (Intercept) 1 0.99783 55419 3 362 &lt; 2.2e-16 ***
+## ShoeBrand 5 0.15330 4 15 1092 6.449e-07 ***
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p>Preforming the MANOVA, the result is a p- value of 6.449e-7 which means this dataset provides significant evidence against the null hypothesis. Therefore, shoe brand does have an effect on mean training time, total miles run, and mile pace.
+However, there are limitations to this analysis. Looking at the boxplot, we can see that there are a lot of outliers and equal variance is not met for all dependent variables. We also do not know if there is an absence of multicollinearity meaning the numeric variables may be too correlated.</p>
+</div>
+<div id="anovas" class="section level2">
+<h2>ANOVAs</h2>
+<p>To look further into the shoe brand effect on mean training time, total miles run, and mile pace, I conducted a One-Way ANOVA for each dependent variable.
+The Hypotheses are as follows:</p>
+<ul>
+<li><p>Ho: The mean training time of all six shoe brands are equal.</p></li>
+<li><p>Ha: The mean training time of all six shoe brands are not equal.</p></li>
+<li><p>Ho: The mean mile pace of all six shoe brands are equal.</p></li>
+<li><p>Ha: The mean mile pace of all six shoe brands are not equal.</p></li>
+<li><p>Ho: The mean total miles ran for all six shoe brands are equal.</p></li>
+<li><p>Ha: The mean total miles ran for all six shoe brands are not equal.</p></li>
+</ul>
+<pre class="r"><code>#ANOVA Models
+#training time
+train_anova &lt;- lm(TimeMin~ShoeBrand, data=Marathon)
+#mile pace
+pace_anova &lt;- lm(PaceMin~ShoeBrand, data=Marathon)
+#total miles
+miles_anova &lt;- lm(Miles~ShoeBrand, data=Marathon)
+
+#Test
+Anova(train_anova, type=3)</code></pre>
+<pre><code>## Anova Table (Type III tests)
+##
+## Response: TimeMin
+## Sum Sq Df F value Pr(&gt;F)
+## (Intercept) 275185 1 349.1762 &lt; 2e-16 ***
+## ShoeBrand 9383 5 2.3812 0.03818 *
+## Residuals 286868 364
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>Anova(pace_anova, type=3)</code></pre>
+<pre><code>## Anova Table (Type III tests)
+##
+## Response: PaceMin
+## Sum Sq Df F value Pr(&gt;F)
+## (Intercept) 5313.2 1 33772.7196 &lt; 2.2e-16 ***
+## ShoeBrand 3.5 5 4.5061 0.0005351 ***
+## Residuals 57.3 364
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code>Anova(miles_anova, type=3)</code></pre>
+<pre><code>## Anova Table (Type III tests)
+##
+## Response: Miles
+## Sum Sq Df F value Pr(&gt;F)
+## (Intercept) 3713.3 1 395.878 &lt; 2e-16 ***
+## ShoeBrand 127.1 5 2.709 0.02028 *
+## Residuals 3414.3 364
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<pre class="r"><code># all p-values &lt; 0.05
+
+#Post Hoc emmeans
+library(emmeans)
+lsmeans(train_anova, pairwise~ShoeBrand)</code></pre>
+<pre><code>## $lsmeans
+## ShoeBrand lsmean SE df lower.CL upper.CL
+## Addidas 61.0 3.26 364 54.56 67.4
+## Asics 60.7 2.77 364 55.29 66.2
+## Brooks 53.3 5.51 364 42.46 64.1
+## Izumi 48.4 3.72 364 41.13 55.8
+## Mizuno 53.5 2.70 364 48.22 58.8
+## New Balance 32.1 19.85 364 -6.89 71.2
+##
+## Confidence level used: 0.95
+##
+## $contrasts
+## contrast estimate SE df t.ratio p.value
+## Addidas - Asics 0.247 4.28 364 0.058 1.0000
+## Addidas - Brooks 7.690 6.40 364 1.201 0.8360
+## Addidas - Izumi 12.542 4.95 364 2.535 0.1167
+## Addidas - Mizuno 7.445 4.24 364 1.757 0.4947
+## Addidas - New Balance 28.840 20.12 364 1.434 0.7065
+## Asics - Brooks 7.442 6.16 364 1.208 0.8329
+## Asics - Izumi 12.294 4.63 364 2.653 0.0876
+## Asics - Mizuno 7.198 3.87 364 1.862 0.4276
+## Asics - New Balance 28.592 20.04 364 1.427 0.7108
+## Brooks - Izumi 4.852 6.64 364 0.730 0.9781
+## Brooks - Mizuno -0.244 6.13 364 -0.040 1.0000
+## Brooks - New Balance 21.150 20.60 364 1.027 0.9088
+## Izumi - Mizuno -5.096 4.60 364 -1.109 0.8776
+## Izumi - New Balance 16.298 20.20 364 0.807 0.9662
+## Mizuno - New Balance 21.394 20.03 364 1.068 0.8938
+##
+## P value adjustment: tukey method for comparing a family
+of 6 estimates</code></pre>
+<pre class="r"><code># pairwise p-values &gt; 0.05
+
+lsmeans(pace_anova, pairwise~ShoeBrand)</code></pre>
+<pre><code>## $lsmeans
+## ShoeBrand lsmean SE df lower.CL upper.CL
+## Addidas 8.47 0.0461 364 8.38 8.56
+## Asics 8.33 0.0391 364 8.25 8.40
+## Brooks 8.24 0.0778 364 8.09 8.39
+## Izumi 8.57 0.0525 364 8.47 8.68
+## Mizuno 8.40 0.0382 364 8.33 8.48
+## New Balance 8.04 0.2805 364 7.48 8.59
+##
+## Confidence level used: 0.95
+##
+## $contrasts
+## contrast estimate SE df t.ratio p.value
+## Addidas - Asics 0.1456 0.0604 364 2.408 0.1561
+## Addidas - Brooks 0.2318 0.0904 364 2.563 0.1091
+## Addidas - Izumi -0.1003 0.0699 364 -1.435 0.7057
+## Addidas - Mizuno 0.0715 0.0599 364 1.194 0.8394
+## Addidas - New Balance 0.4380 0.2842 364 1.541 0.6379
+## Asics - Brooks 0.0862 0.0871 364 0.991 0.9208
+## Asics - Izumi -0.2459 0.0655 364 -3.755 0.0028
+## Asics - Mizuno -0.0741 0.0546 364 -1.356 0.7533
+## Asics - New Balance 0.2925 0.2832 364 1.033 0.9067
+## Brooks - Izumi -0.3321 0.0939 364 -3.538 0.0060
+## Brooks - Mizuno -0.1603 0.0866 364 -1.850 0.4349
+## Brooks - New Balance 0.2062 0.2911 364 0.709 0.9809
+## Izumi - Mizuno 0.1718 0.0649 364 2.645 0.0892
+## Izumi - New Balance 0.5383 0.2853 364 1.887 0.4121
+## Mizuno - New Balance 0.3665 0.2831 364 1.295 0.7878
+##
+## P value adjustment: tukey method for comparing a family
+of 6 estimates</code></pre>
+<pre class="r"><code># Asics - Izumi p = 0.0028
+# Brooks - Izumi p = 0.0060
+
+lsmeans(miles_anova, pairwise~ShoeBrand)</code></pre>
+<pre><code>## $lsmeans
+## ShoeBrand lsmean SE df lower.CL upper.CL
+## Addidas 7.08 0.356 364 6.384 7.78
+## Asics 7.20 0.302 364 6.608 7.79
+## Brooks 6.44 0.601 364 5.261 7.62
+## Izumi 5.65 0.406 364 4.851 6.45
+## Mizuno 6.35 0.295 364 5.767 6.93
+## New Balance 4.00 2.166 364 -0.259 8.26
+##
+## Confidence level used: 0.95
+##
+## $contrasts
+## contrast estimate SE df t.ratio p.value
+## Addidas - Asics -0.117 0.467 364 -0.251 0.9999
+## Addidas - Brooks 0.641 0.698 364 0.919 0.9416
+## Addidas - Izumi 1.435 0.540 364 2.658 0.0864
+## Addidas - Mizuno 0.737 0.462 364 1.596 0.6019
+## Addidas - New Balance 3.084 2.195 364 1.405 0.7240
+## Asics - Brooks 0.759 0.672 364 1.129 0.8693
+## Asics - Izumi 1.552 0.506 364 3.069 0.0277
+## Asics - Mizuno 0.855 0.422 364 2.026 0.3294
+## Asics - New Balance 3.201 2.187 364 1.464 0.6875
+## Brooks - Izumi 0.793 0.725 364 1.094 0.8835
+## Brooks - Mizuno 0.096 0.669 364 0.144 1.0000
+## Brooks - New Balance 2.442 2.247 364 1.087 0.8865
+## Izumi - Mizuno -0.697 0.501 364 -1.390 0.7328
+## Izumi - New Balance 1.649 2.203 364 0.748 0.9756
+## Mizuno - New Balance 2.346 2.186 364 1.074 0.8917
+##
+## P value adjustment: tukey method for comparing a family
+of 6 estimates</code></pre>
+<pre class="r"><code># Asics - Izumi p = 0.0277</code></pre>
+<p>The One-Way ANOVA results were significant for all dependant variables. However, when performing a post hoc analysis, shoe brand was only shown to have a significant effect between Asics-Izumi (p-val = 0.0028) &amp; Brooks-Izumi (p-val = 0.006) for average pace and also an effect on average total miles between Asics - Izumi (p-val = 0.0277).</p>
+<p>The MANOVA and ANOVA tests use a 0.05 alpha level meaning each has a 5% probability of making a Type I error. However, since the MANOVA and ANOVA test use multiple comparisons against the numeric variables, the chance of a Type I error actually increases. To counteract that effect a bonferroni correction is used to accurately analyze the p-values.</p>
+<pre class="r"><code>#bonferroni = 0.05/#comparisons
+bonfer &lt;- 0.05/6
+bonfer</code></pre>
+<pre><code>## [1] 0.008333333</code></pre>
+<p>The bonferroni correction for the ANOVA tests I conducted decreases the significance level from 0.05 to 0.0083. This means my past conclusion was incorrect and that the dataset only has evidence for the mean mile pace of all six shoe brands being different.</p>
+</div>
+<div id="randomization" class="section level2">
+<h2>Randomization</h2>
+<p>Next I performed a randomized two-tailed T Test to analyze the difference in pace mean for shoe brands. I chose to look at Asics specifically, since it was present in the significant One-Way ANOVA results from above.</p>
+<pre class="r"><code># separate dataframe
+pace_shoe &lt;- Marathon %&gt;% select(ShoeBrand, PaceMin)
+
+#ggplot non-normal distribution of Pace for each Shoe
+ggplot(pace_shoe, aes(PaceMin,fill=ShoeBrand)) + geom_histogram(bins=6.5) + facet_wrap(~ShoeBrand,ncol=2) + theme(legend.position=&quot;none&quot;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-5-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#simulate null distribution
+#mean of pace for each shoe brand if there was no association
+pace_shoe %&gt;% group_by(ShoeBrand) %&gt;% summarize(means=mean(PaceMin)) %&gt;% summarize(`mean_diff`=diff(means))</code></pre>
+<pre><code>## # A tibble: 5 x 1
+##   mean_diff
+##       &lt;dbl&gt;
+## 1   -0.146 
+## 2   -0.0862
+## 3    0.332 
+## 4   -0.172 
+## 5   -0.367</code></pre>
+<pre class="r"><code>#differences vector 
+rand_dist&lt;-vector()
+
+#scramble and mean difference for Asics all other brands
+for(i in 1:5000){
+new &lt;- data.frame(Pace=sample(pace_shoe$PaceMin), Brand=pace_shoe$ShoeBrand) 
+rand_dist[i] &lt;- mean(new[new$Brand==&quot;Asics&quot;,]$Pace) -  mean(new[new$Brand!=&quot;Asics&quot;,]$Pace)} 
+
+#two-tailed p
+#probability of getting a mean difference as extreme if there was truly no difference between Asics and other shoe brands on mile pace
+mean(rand_dist &gt; 0.086 | rand_dist &lt; -0.086)</code></pre>
+<pre><code>## [1] 0.0662</code></pre>
+<pre class="r"><code>#t-test compare
+t.test(data=pace_shoe, PaceMin~ShoeBrand==&quot;Asics&quot;,)</code></pre>
+<pre><code>##
+## Welch Two Sample t-test
+##
+## data: PaceMin by ShoeBrand == &quot;Asics&quot;
+## t = 2.3209, df = 173.84, p-value = 0.02145
+## alternative hypothesis: true difference in means is not
+equal to 0
+## 95 percent confidence interval:
+## 0.01678574 0.20760959
+## sample estimates:
+## mean in group FALSE mean in group TRUE
+## 8.440169 8.327971</code></pre>
+<p>The randomized analysis gives significant evidence that the true difference in pace means is not equal to 0 for Asics (t= 2.321, df = 173.84, p= 0.021).</p>
+<div id="randomization-plot" class="section level3">
+<h3>Randomization Plot</h3>
+<pre class="r"><code>#graph randomized Asics&#39; with mean pace cutoff
+{hist(rand_dist, main=&quot;Randomized Asic Distribution with Mean Pace Min&quot;, xlab = &quot;Asics Random&quot;); abline(v = c(-0.086, 0.086), col=&quot;red&quot;)}</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-6-1.png" width="768" style="display: block; margin: auto;" /></p>
+</div>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear Regression</h2>
+<div id="model" class="section level3">
+<h3>Model</h3>
+<p>For my linear model I chose to predict the total miles run per session from Pace and Shoe Brand, with interaction.</p>
+<pre class="r"><code>#centered variables
+Marathon$pace_c &lt;- Marathon$PaceMin - mean(Marathon$PaceMin)
+
+lmfit &lt;- lm(Miles ~ pace_c*ShoeBrand, data = Marathon)
+
+summary(lmfit)</code></pre>
+<pre><code>##
+## Call:
+## lm(formula = Miles ~ pace_c * ShoeBrand, data =
+Marathon)
+##
+## Residuals:
+## Min 1Q Median 3Q Max
+## -9.0740 -1.4337 -0.4771 0.9615 19.9338
+##
+## Coefficients:
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 6.70473 0.31846 21.053 &lt; 2e-16 ***
+## pace_c 5.86841 0.77883 7.535 4.04e-13 ***
+## ShoeBrandAsics 0.84238 0.41841 2.013 0.0448 *
+## ShoeBrandBrooks 0.04406 0.67546 0.065 0.9480
+## ShoeBrandIzumi -1.06199 0.50549 -2.101 0.0363 *
+## ShoeBrandMizuno -0.34858 0.41134 -0.847 0.3973
+## ShoeBrandNew Balance -2.70473 4.23902 -0.638 0.5238
+## pace_c:ShoeBrandAsics -1.59321 1.00193 -1.590 0.1127
+## pace_c:ShoeBrandBrooks -4.03543 1.79748 -2.245 0.0254 *
+## pace_c:ShoeBrandIzumi -5.82969 1.24603 -4.679 4.10e-06
+***
+## pace_c:ShoeBrandMizuno -4.43978 1.02891 -4.315 2.07e-05
+***
+## pace_c:ShoeBrandNew Balance -5.86841 10.12406 -0.580
+0.5625
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1
+##
+## Residual standard error: 2.705 on 358 degrees of freedom
+## Multiple R-squared: 0.2602, Adjusted R-squared: 0.2375
+## F-statistic: 11.45 on 11 and 358 DF, p-value: &lt; 2.2e-16</code></pre>
+<p>Controlling for shoe brand, as the average mile ran in a training session increases by 1 mile, the average pace per mile increases by 2.2407 minutes.
+Controlling for pace, when wearing Addidas the average mile ran increases by 0.5381 miles. For Asics it increases by 1.3805 miles, Brooks it increases by 0.5822 miles, and Mizuno increases 0.1896 miles.
+The only decrease in average mile ran is when wearing Izumi which takes off 0.5238 miles from the training session.
+When looking at the interaction terms we see the effect of pace on average miles run per training session is different if you’re wearing Addidas compared to other shoe brands.</p>
+</div>
+<div id="linear-regression-plot" class="section level3">
+<h3>Linear Regression Plot</h3>
+<pre class="r"><code>ggplot(Marathon ,aes(x = PaceMin, y = Miles, color=ShoeBrand)) + geom_smooth(method=&#39;lm&#39;) + geom_point() + xlab(&#39;Centered Runner Pace (min.)&#39;) + ylab(&#39;Mean Miles Ran&#39;) + ggtitle(&#39;Mean Miles Ran by Pace and Shoe Brand&#39;) +  theme_classic()</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-8-1.png" width="768" style="display: block; margin: auto;" />
+Looking at the adjusted r squared value, 23.75% of the average mile variation can be accounted for by the model.</p>
+</div>
+<div id="assumptions" class="section level3">
+<h3>Assumptions</h3>
+<p>To ensure this is a reliable model I checked the linearity, normality, and homoskedasticity assumptions.</p>
+<p>Plotting Pace against Miles, there was a very weak positive linear association.
+Then the residuals were used in a QQ plot to visualize normality and in a Residuals Plot to look for Equal Variance.
+There was a heavy right skew to the model and when a Shapiro test was run there was significant evidence of non-normality.
+Finally to ensure equal variance and test homoskedasticity I used <code>bptest()</code> and fail to reject the null hypothesis, confirming the data is homoskedsastic.</p>
+<pre class="r"><code>#Residual Calculation
+resids&lt;-lmfit$residuals #residuals
+fitvals&lt;-lmfit$fitted.values #yhats
+
+#Linearity of numeric predictors
+plot(Marathon$PaceMin, Marathon$Miles, xlab = &#39;Runner Pace (min.)&#39;, ylab = &#39;Total Miles Ran&#39;, main = &#39;Test of Pace Linearity&#39;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-9-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Confirm Normality 
+#QQ Plot
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids))</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-9-2.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>#Shapiro
+#Ho: distribution is normal
+shapiro.test(resids)</code></pre>
+<pre><code>## 
+##  Shapiro-Wilk normality test
+## 
+## data:  resids
+## W = 0.80586, p-value &lt; 2.2e-16</code></pre>
+<pre class="r"><code>#Confirm Homoskedasticity
+#Ho: homoskedsastic
+library(sandwich)
+library(lmtest)
+bptest(lmfit)</code></pre>
+<pre><code>## 
+##  studentized Breusch-Pagan test
+## 
+## data:  lmfit
+## BP = 19.606, df = 11, p-value = 0.05104</code></pre>
+<pre class="r"><code>#Confirm Equal Variance
+#Residuals Plot
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color=&#39;red&#39;)</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-9-3.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># some funneling violation in equal variance (Limitation)</code></pre>
+</div>
+<div id="robust-standard-errors" class="section level3">
+<h3>Robust Standard Errors</h3>
+<pre class="r"><code>coeftest(lmfit, vcov = vcovHC(lmfit, type=&quot;HC1&quot;))</code></pre>
+<pre><code>##
+## t test of coefficients:
+##
+## Estimate Std. Error t value Pr(&gt;|t|)
+## (Intercept) 6.704732 0.305524 21.9450 &lt; 2.2e-16 ***
+## pace_c 5.868411 1.280594 4.5826 6.353e-06 ***
+## ShoeBrandAsics 0.842377 0.455982 1.8474 0.065515 .
+## ShoeBrandBrooks 0.044058 0.466951 0.0944 0.924882
+## ShoeBrandIzumi -1.061993 0.384055 -2.7652 0.005983 **
+## ShoeBrandMizuno -0.348581 0.395386 -0.8816 0.378572
+## ShoeBrandNew Balance -2.704732 0.305524 -8.8528 &lt;
+2.2e-16 ***
+## pace_c:ShoeBrandAsics -1.593210 1.586037 -1.0045
+0.315805
+## pace_c:ShoeBrandBrooks -4.035430 1.560221 -2.5864
+0.010091 *
+## pace_c:ShoeBrandIzumi -5.829693 1.777627 -3.2795
+0.001142 **
+## pace_c:ShoeBrandMizuno -4.439783 1.353091 -3.2812
+0.001135 **
+## pace_c:ShoeBrandNew Balance -5.868411 1.280594 -4.5826
+6.353e-06 ***
+## ---
+## Signif. codes: 0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1
+&#39; &#39; 1</code></pre>
+<p>With a robust evaluation, the standard error decreases for all variables and interactions. With this many more effects are considered significant such as ShoeBrand4 main effect and it’s interaction.</p>
+</div>
+<div id="bootstrap-standard-errors" class="section level3">
+<h3>Bootstrap Standard Errors</h3>
+<p>To compute bootstrapped standard errors I used the resampling residuals method.</p>
+<pre class="r"><code>#resample and replace residuals
+#refit model and save coef
+resid_resamp &lt;- replicate(5000,{  
+new_resids &lt;- sample(resids,replace=TRUE) 
+Marathon$new_y &lt;- fitvals + new_resids     
+lmfit &lt;- lm(new_y ~ pace_c*ShoeBrand, data=Marathon)
+coef(lmfit) })
+
+#Bootstrapped SEs 
+resid_resamp%&gt;%t%&gt;%as.data.frame%&gt;%summarize_all(sd)</code></pre>
+<pre><code>## (Intercept) pace_c ShoeBrandAsics ShoeBrandBrooks
+ShoeBrandIzumi ShoeBrandMizuno
+## 1 0.3111615 0.7679006 0.4033298 0.6601388 0.4923034
+0.4022465
+## ShoeBrandNew Balance pace_c:ShoeBrandAsics
+pace_c:ShoeBrandBrooks pace_c:ShoeBrandIzumi
+## 1 4.262132 0.9889466 1.766358 1.223507
+## pace_c:ShoeBrandMizuno pace_c:ShoeBrandNew Balance
+## 1 1.024901 10.07343</code></pre>
+<ul>
+<li>Discuss any changes you observe in SEs and p-values using these SEs compared to the original SEs and the robust SEs)
+Compared to the original SEs, the bootstrapping method was very similar. For example looking at pace main effect the original SE is 1.7233 and the bootstrapping SE is 1.7127. Therefore the evaluation would give the same significance results.
+The robust SE, like with the original SEs, are much lower compared to the bootstrap and will have more significant effects than the bootstrap residuals method.</li>
+</ul>
+</div>
+</div>
+<div id="logistic-regression" class="section level2">
+<h2>Logistic Regression</h2>
+<div id="model-1" class="section level3">
+<h3>Model</h3>
+<p>I chose to create a logistic regression model predicting <code>Short</code> (my binary variable indicating length of training run) using Shoe Brand and Pace without interaction.
+I chose these predictors again because <code>Short</code> is a binary explanatory variable dependent on my <code>Miles</code> variable, and <code>TimeMin</code> and <code>PaceMin</code> are so closely related I knew the ROC curve was practically going to be a box.</p>
+<pre class="r"><code>#binary already defined
+#1 = 5 miles or less
+#0 = more than 5 miles run
+Marathon &lt;- Marathon %&gt;% mutate(outcome=ifelse(Short==1,&quot;less than 5 miles&quot;,&quot;greater than 5 miles&quot;))
+
+#no interaction total time &amp; average pace
+lmfit2 &lt;- glm(Short~ShoeBrand+pace_c, data=Marathon, family=&quot;binomial&quot;)
+
+#odds scale coefs
+coef(lmfit2) %&gt;% exp %&gt;% round(5) %&gt;% data.frame</code></pre>
+<pre><code>##                                .
+## (Intercept)          1.17360e+00
+## ShoeBrandAsics       4.07940e-01
+## ShoeBrandBrooks      3.94580e-01
+## ShoeBrandIzumi       1.98496e+00
+## ShoeBrandMizuno      5.55190e-01
+## ShoeBrandNew Balance 1.00484e+06
+## pace_c               1.99920e-01</code></pre>
+<p>These coefficient estimates indicate how the odds of predicting <code>Short</code> change for each shoe brand and for every additional minute increase to running pace. Since we used <code>exp</code> these are the factors by which the odds increase.
+For example, we see ShoeBrand4 Izumi increases the odds of predicting a run less than 5 miles by a factor of 0.26. ShoeBrand3 Brooks on the other hand only increases those odds by a factor of 0.05.</p>
+<pre class="r"><code>#function odds to probs
+odd2prob &lt;- function(odds) {odds/(1+odds)}
+
+#predicted probs from model
+probs &lt;- predict(lmfit2, type=&quot;response&quot;)
+
+#Confusion matrix
+table(predict = as.numeric(probs&gt;.5), truth=Marathon$Short) %&gt;% addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   156  82 238
+##     1    46  86 132
+##     Sum 202 168 370</code></pre>
+<pre class="r"><code>#Accuracy
+(156+86)/370</code></pre>
+<pre><code>## [1] 0.6540541</code></pre>
+<pre class="r"><code>#TNR
+86/132</code></pre>
+<pre><code>## [1] 0.6515152</code></pre>
+<pre class="r"><code>#TPR
+156/238</code></pre>
+<pre><code>## [1] 0.6554622</code></pre>
+<pre class="r"><code>#PPV
+156/202</code></pre>
+<pre><code>## [1] 0.7722772</code></pre>
+<p>This Logistics Regression model is 65.4% accurate and has a pretty equivalent sensitivity and specificity of ~65% correct classifications. Precision of the model is the greatest with 77% positive predictive value.</p>
+</div>
+<div id="desnisty-plot" class="section level3">
+<h3>Desnisty Plot</h3>
+<pre class="r"><code>#1 = 5 miles or less
+#0 = more than 5 miles run
+
+#log-odds for everyone
+Marathon$logit &lt;- predict(lmfit2, type=&quot;link&quot;)
+
+Marathon %&gt;% ggplot() + geom_density(aes(logit, color=outcome, fill=outcome), alpha=.4) + geom_vline(xintercept=0) + xlab(&quot;logit (log-odds)&quot;) +  geom_rug(aes(logit,color=outcome)) </code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-15-1.png" width="768" style="display: block; margin: auto;" />
+This plot indicates that for logit&gt;0 the model predicts a run less than 5 miles (1) and for logit&lt;0 the model predicts a run greater than 5 miles (0).</p>
+</div>
+<div id="roc-plot" class="section level3">
+<h3>ROC Plot</h3>
+<pre class="r"><code>library(plotROC)
+ROCplot&lt;-ggplot(Marathon) + geom_roc(aes(d=Short,m=probs), n.cuts=0)
+ROCplot</code></pre>
+<p><img src="../../project/project2_files/figure-html/unnamed-chunk-16-1.png" width="768" style="display: block; margin: auto;" /></p>
+<pre class="r"><code>calc_auc(ROCplot)</code></pre>
+<pre><code>##   PANEL group       AUC
+## 1     1    -1 0.7086427</code></pre>
+<p>Plotting Sensitivity against 1-Specificity, the model is not exactly a linear shape. With a AUC = 0.71 we can determine more clearly that the model falls into the fair predictor category (07-0.8).</p>
+</div>
+</div>
+<div id="logistic-regression-for-all-variables" class="section level2">
+<h2>Logistic Regression for All Variables</h2>
+<div id="model-2" class="section level3">
+<h3>Model</h3>
+<pre class="r"><code>lmfit3 &lt;- glm(Short~ShoeBrand+PaceMin+Miles+TimeMin, data=Marathon, family=&quot;binomial&quot;)
+
+#predicted probs from model
+probs2 &lt;- predict(lmfit3, type=&quot;response&quot;)
+
+#Confusion matrix
+table(predict = as.numeric(probs2&gt;.5), truth=Marathon$Short) %&gt;% addmargins</code></pre>
+<pre><code>##        truth
+## predict   0   1 Sum
+##     0   202   0 202
+##     1     0 168 168
+##     Sum 202 168 370</code></pre>
+<pre class="r"><code>#Accuracy
+(202+168)/370</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>#TNR
+168/168</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>#TPR
+202/2020</code></pre>
+<pre><code>## [1] 0.1</code></pre>
+<pre class="r"><code>#PPV
+202/202</code></pre>
+<pre><code>## [1] 1</code></pre>
+<pre class="r"><code>#AUC calculator
+library(pROC) 
+auc(Marathon$Short,probs2)</code></pre>
+<pre><code>## Area under the curve: 1</code></pre>
+<p>With all of the variables used, the logistic regression becomes a perfect predictor.</p>
+<p>…</p>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>

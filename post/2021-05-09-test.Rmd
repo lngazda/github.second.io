@@ -1,0 +1,21 @@
+---
+title: Test
+author: Lauren Gazda
+date: '2021-05-09'
+slug: test
+categories: []
+tags: []
+description: ' '
+---
+This is some nonsense.
+[Link to project 1](/project/project1/)
+[Link to google](https://www.google.com)
+```{R}
+#R chunk
+```
+```{python}
+#Phython chunk
+```
+
+
+

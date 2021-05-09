@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Projects on Lauren Gazda</title>
+    <link>/project/</link>
+    <description>Recent content in Projects on Lauren Gazda</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language><atom:link href="/project/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Project 1: Exploratory Data Analysis</title>
+      <link>/project/project1/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project1/</guid>
+      <description>Data Wrangling and Exploration Lauren Gazda  eID: lng673  Introduction to the Data I used to be a very athletic person. I swam competitively when I was younger and was also on the track team in high school. When I went on to college I was disappointed when I was only able to workout a couple times a week. Then just as I had signed up for a marathon in attempt to reverse my idleness and try something new, quarantine hit.</description>
+    </item>
+    
+    <item>
+      <title>Project 2: Modeling, Testing, and Predicting</title>
+      <link>/project/project2/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/project/project2/</guid>
+      <description>Lauren Gazda  eID: lng673  Introduction to the Data Since COVID delayed my first marathon, I chose to analyze the daily training for a marathon runner which I found in the Stat2Data package. The modified Marathon dataset I imported contains 307 observations which document a runner’s daily run from 2005-2006 with no ShoeBrand N/A entries. I will be looking at the numeric variables Miles: Miles for training run, TimeMin: Training time (in minutes), and the PaceMin: Running pace (in minutes per mile).</description>
+    </item>
+    
+  </channel>
+</rss>

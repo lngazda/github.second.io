@@ -1,0 +1,337 @@
+---
+title: 'Project 2: Modeling, Testing, and Predicting'
+author: "SDS348"
+date: ''
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+hook_output = knit_hooks$get('output')
+knit_hooks$set(output = function(x, options) {
+  # this hook is used only when the linewidth option is not NULL
+  if (!is.null(n <- options$linewidth)) {
+    x = knitr:::split_lines(x)
+    # any lines wider than n should be wrapped
+    if (any(nchar(x) > n)) x = strwrap(x, width = n)
+    x = paste(x, collapse = '\n')
+  }
+  hook_output(x, options)
+})
+
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE,fig.align="center",warning=FALSE,message=FALSE,fig.width=8, fig.height=5, linewidth=60)
+options(tibble.width = 100,width = 100)
+library(tidyverse)
+```
+#### Lauren Gazda 
+#### eID: lng673
+
+## Introduction to the Data
+Since COVID delayed my first marathon, I chose to analyze the daily training for a marathon runner which I found in the Stat2Data package. The modified Marathon dataset I imported contains 307 observations which document a runner's daily run from 2005-2006 with no ShoeBrand N/A entries. I will be looking at the numeric variables `Miles: Miles for training run`, `TimeMin: Training time (in minutes)`, and the `PaceMin: Running pace (in minutes per mile)`. The binary variable `Short` codes for 1=5 miles or less & 0=more than 5 miles run. Finally, the categorical variable `ShoeBrand` documents if Addidas, Asics, Brooks, Izumis, Mizunos, or New Balances were worn during the run.
+
+```{R}
+Marathon <- read.csv("Marathon.csv")
+Marathon <- subset (Marathon, select = -c(X, Date, Time, Pace, After2004))
+Marathon <- na.omit(Marathon)
+head(Marathon)
+```
+
+## MANOVA
+To see if the average training time, total miles, and mile pace are different across the shoe brands, I performed a One-Way MANOVA. 
+
+ - Ho: Shoe brand does not have an effect on mean training time, total miles run, and mile pace
+ - Ha: Shoe brand does have an effect on mean training time, total miles run, and mile pace
+
+```{R}
+#Normality and Equal Variance
+library(ggpubr)
+ggboxplot(Marathon, x = "ShoeBrand", y = c("TimeMin", "PaceMin", "Miles"), 
+  merge = TRUE, palette = "jco", main = "Test of Normality for all Numeric Variables") 
+
+#ANOVA Model
+library(car)
+multi_manova<-lm(cbind(TimeMin,PaceMin,Miles) ~ ShoeBrand, data = Marathon)
+
+#Results
+Manova(multi_manova, type=3)
+```
+Preforming the MANOVA, the result is a p- value of 6.449e-7 which means this dataset provides significant evidence against the null hypothesis. Therefore, shoe brand does have an effect on mean training time, total miles run, and mile pace.
+However, there are limitations to this analysis. Looking at the boxplot, we can see that there are a lot of outliers and equal variance is not met for all dependent variables. We also do not know if there is an absence of multicollinearity meaning the numeric variables may be too correlated.
+
+## ANOVAs
+To look further into the shoe brand effect on mean training time, total miles run, and mile pace, I conducted a One-Way ANOVA for each dependent variable.
+The Hypotheses are as follows:
+
+- Ho: The mean training time of all six shoe brands are equal.
+- Ha: The mean training time of all six shoe brands are not equal.
+
+- Ho: The mean mile pace of all six shoe brands are equal.
+- Ha: The mean mile pace of all six shoe brands are not equal.
+
+- Ho: The mean total miles ran for all six shoe brands are equal.
+- Ha: The mean total miles ran for all six shoe brands are not equal.
+
+```{R}
+#ANOVA Models
+#training time
+train_anova <- lm(TimeMin~ShoeBrand, data=Marathon)
+#mile pace
+pace_anova <- lm(PaceMin~ShoeBrand, data=Marathon)
+#total miles
+miles_anova <- lm(Miles~ShoeBrand, data=Marathon)
+
+#Test
+Anova(train_anova, type=3)
+Anova(pace_anova, type=3)
+Anova(miles_anova, type=3)
+# all p-values < 0.05
+
+#Post Hoc emmeans
+library(emmeans)
+lsmeans(train_anova, pairwise~ShoeBrand)
+# pairwise p-values > 0.05
+
+lsmeans(pace_anova, pairwise~ShoeBrand)
+# Asics - Izumi p = 0.0028
+# Brooks - Izumi p = 0.0060
+
+lsmeans(miles_anova, pairwise~ShoeBrand)
+# Asics - Izumi p = 0.0277
+```
+The One-Way ANOVA results were significant for all dependant variables. However, when performing a post hoc analysis, shoe brand was only shown to have a significant effect between Asics-Izumi (p-val = 0.0028) & Brooks-Izumi (p-val = 0.006) for average pace and also an effect on average total miles between Asics - Izumi (p-val = 0.0277).
+
+The MANOVA and ANOVA tests use a 0.05 alpha level meaning each has a 5% probability of making a Type I error. However, since the MANOVA and ANOVA test use multiple comparisons against the numeric variables, the chance of a Type I error actually increases. To counteract that effect a bonferroni correction is used to accurately analyze the p-values.
+
+```{R}
+#bonferroni = 0.05/#comparisons
+bonfer <- 0.05/6
+bonfer
+```
+The bonferroni correction for the ANOVA tests I conducted decreases the significance level from 0.05 to 0.0083. This means my past conclusion was incorrect and that the dataset only has evidence for the mean mile pace of all six shoe brands being different. 
+
+## Randomization
+Next I performed a randomized two-tailed T Test to analyze the  difference in pace mean for shoe brands. I chose to look at Asics specifically, since it was present in the significant One-Way ANOVA results from above.
+
+```{R}
+# separate dataframe
+pace_shoe <- Marathon %>% select(ShoeBrand, PaceMin)
+
+#ggplot non-normal distribution of Pace for each Shoe
+ggplot(pace_shoe, aes(PaceMin,fill=ShoeBrand)) + geom_histogram(bins=6.5) + facet_wrap(~ShoeBrand,ncol=2) + theme(legend.position="none")
+
+#simulate null distribution
+#mean of pace for each shoe brand if there was no association
+pace_shoe %>% group_by(ShoeBrand) %>% summarize(means=mean(PaceMin)) %>% summarize(`mean_diff`=diff(means))
+
+#differences vector 
+rand_dist<-vector()
+
+#scramble and mean difference for Asics all other brands
+for(i in 1:5000){
+new <- data.frame(Pace=sample(pace_shoe$PaceMin), Brand=pace_shoe$ShoeBrand) 
+rand_dist[i] <- mean(new[new$Brand=="Asics",]$Pace) -  mean(new[new$Brand!="Asics",]$Pace)} 
+
+#two-tailed p
+#probability of getting a mean difference as extreme if there was truly no difference between Asics and other shoe brands on mile pace
+mean(rand_dist > 0.086 | rand_dist < -0.086)
+
+#t-test compare
+t.test(data=pace_shoe, PaceMin~ShoeBrand=="Asics",)
+```
+The randomized analysis gives significant evidence that the true difference in pace means is not equal to 0 for Asics (t= 2.321, df = 173.84, p= 0.021).
+
+### Randomization Plot
+
+```{R}
+#graph randomized Asics' with mean pace cutoff
+{hist(rand_dist, main="Randomized Asic Distribution with Mean Pace Min", xlab = "Asics Random"); abline(v = c(-0.086, 0.086), col="red")}
+```
+
+## Linear Regression
+### Model
+For my linear model I chose to predict the total miles run per session from Pace and Shoe Brand, with interaction.
+
+```{R}
+#centered variables
+Marathon$pace_c <- Marathon$PaceMin - mean(Marathon$PaceMin)
+
+lmfit <- lm(Miles ~ pace_c*ShoeBrand, data = Marathon)
+
+summary(lmfit)
+```
+Controlling for shoe brand, as the average mile ran in a training session increases by 1 mile, the average pace per mile increases by 2.2407 minutes.
+Controlling for pace, when wearing Addidas the average mile ran increases by 0.5381 miles. For Asics it increases by 1.3805 miles, Brooks it increases by 0.5822 miles, and Mizuno increases 0.1896 miles. 
+The only decrease in average mile ran is when wearing Izumi which takes off 0.5238 miles from the training session. 
+When looking at the interaction terms we see the effect of pace on average miles run per training session is different if you're wearing Addidas compared to other shoe brands. 
+    
+### Linear Regression Plot    
+
+```{R}
+ggplot(Marathon ,aes(x = PaceMin, y = Miles, color=ShoeBrand)) + geom_smooth(method='lm') + geom_point() + xlab('Centered Runner Pace (min.)') + ylab('Mean Miles Ran') + ggtitle('Mean Miles Ran by Pace and Shoe Brand') +  theme_classic()
+```
+Looking at the adjusted r squared value, 23.75% of the average mile variation can be accounted for by the model.
+
+### Assumptions
+To ensure this is a reliable model I checked the linearity, normality, and homoskedasticity assumptions.
+
+Plotting Pace against Miles, there was a very weak positive linear association.
+Then the residuals were used in a QQ plot to visualize normality and in a Residuals Plot to look for Equal Variance.
+There was a heavy right skew to the model and when a Shapiro test was run there was significant evidence of non-normality.
+Finally to ensure equal variance and test homoskedasticity I used `bptest() ` and fail to reject the null hypothesis, confirming the data is homoskedsastic.
+    
+```{R}
+#Residual Calculation
+resids<-lmfit$residuals #residuals
+fitvals<-lmfit$fitted.values #yhats
+
+#Linearity of numeric predictors
+plot(Marathon$PaceMin, Marathon$Miles, xlab = 'Runner Pace (min.)', ylab = 'Total Miles Ran', main = 'Test of Pace Linearity')
+
+#Confirm Normality 
+#QQ Plot
+ggplot()+geom_qq(aes(sample=resids))+geom_qq_line(aes(sample=resids))
+
+#Shapiro
+#Ho: distribution is normal
+shapiro.test(resids)
+
+#Confirm Homoskedasticity
+#Ho: homoskedsastic
+library(sandwich)
+library(lmtest)
+bptest(lmfit)
+
+#Confirm Equal Variance
+#Residuals Plot
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')
+# some funneling violation in equal variance (Limitation)
+```
+### Robust Standard Errors
+
+```{R}
+coeftest(lmfit, vcov = vcovHC(lmfit, type="HC1"))
+```
+With a robust evaluation, the standard error decreases for all variables and interactions. With this many more effects are considered significant such as ShoeBrand4 main effect and it's interaction. 
+
+### Bootstrap Standard Errors
+To compute bootstrapped standard errors I used the resampling residuals method. 
+```{R}
+#resample and replace residuals
+#refit model and save coef
+resid_resamp <- replicate(5000,{  
+new_resids <- sample(resids,replace=TRUE) 
+Marathon$new_y <- fitvals + new_resids     
+lmfit <- lm(new_y ~ pace_c*ShoeBrand, data=Marathon)
+coef(lmfit) })
+
+#Bootstrapped SEs 
+resid_resamp%>%t%>%as.data.frame%>%summarize_all(sd)
+```
+- Discuss any changes you observe in SEs and p-values using these SEs compared to the original SEs and the robust SEs)
+Compared to the original SEs, the bootstrapping method was very similar. For example looking at pace main effect the original SE is 1.7233 and the bootstrapping SE is 1.7127. Therefore the evaluation would give the same significance results.
+The robust SE, like with the original SEs, are much lower compared to the bootstrap and will have more significant effects than the bootstrap residuals method.
+
+## Logistic Regression
+### Model
+I chose to create a  logistic regression model predicting `Short` (my binary variable indicating length of training run) using Shoe Brand and Pace without interaction. 
+I chose these predictors again because `Short` is a binary explanatory variable dependent on my `Miles` variable, and `TimeMin` and `PaceMin` are so closely related I knew the ROC curve was practically going to be a box.
+
+```{R}
+#binary already defined
+#1 = 5 miles or less
+#0 = more than 5 miles run
+Marathon <- Marathon %>% mutate(outcome=ifelse(Short==1,"less than 5 miles","greater than 5 miles"))
+
+#no interaction total time & average pace
+lmfit2 <- glm(Short~ShoeBrand+pace_c, data=Marathon, family="binomial")
+
+#odds scale coefs
+coef(lmfit2) %>% exp %>% round(5) %>% data.frame
+``` 
+These coefficient estimates indicate how the odds of predicting `Short` change for each shoe brand and for every additional minute increase to running pace. Since we used `exp` these are the factors by which the odds increase. 
+For example, we see ShoeBrand4 Izumi increases the odds of predicting a run less than 5 miles by a factor of 0.26. ShoeBrand3 Brooks on the other hand only increases those odds by a factor of 0.05.
+
+```{R}
+#function odds to probs
+odd2prob <- function(odds) {odds/(1+odds)}
+
+#predicted probs from model
+probs <- predict(lmfit2, type="response")
+
+#Confusion matrix
+table(predict = as.numeric(probs>.5), truth=Marathon$Short) %>% addmargins
+```
+```{R}
+#Accuracy
+(156+86)/370
+#TNR
+86/132
+#TPR
+156/238
+#PPV
+156/202
+```
+This Logistics Regression model is 65.4% accurate and has a pretty equivalent sensitivity and specificity of ~65% correct classifications. Precision of the model is the greatest with 77% positive predictive value.
+
+### Desnisty Plot
+
+```{R}
+#1 = 5 miles or less
+#0 = more than 5 miles run
+
+#log-odds for everyone
+Marathon$logit <- predict(lmfit2, type="link")
+
+Marathon %>% ggplot() + geom_density(aes(logit, color=outcome, fill=outcome), alpha=.4) + geom_vline(xintercept=0) + xlab("logit (log-odds)") +  geom_rug(aes(logit,color=outcome)) 
+```
+This plot indicates that for logit>0 the model predicts a run less than 5 miles (1) and for logit<0 the model predicts a run greater than 5 miles (0).
+
+### ROC Plot
+
+```{R}
+library(plotROC)
+ROCplot<-ggplot(Marathon) + geom_roc(aes(d=Short,m=probs), n.cuts=0)
+ROCplot
+calc_auc(ROCplot)
+
+```
+Plotting Sensitivity against 1-Specificity, the model is not exactly a linear shape. With a AUC = 0.71 we can determine more clearly that the model falls into the fair predictor category (07-0.8).
+
+## Logistic Regression for All Variables
+### Model
+
+```{R}
+lmfit3 <- glm(Short~ShoeBrand+PaceMin+Miles+TimeMin, data=Marathon, family="binomial")
+
+#predicted probs from model
+probs2 <- predict(lmfit3, type="response")
+
+#Confusion matrix
+table(predict = as.numeric(probs2>.5), truth=Marathon$Short) %>% addmargins
+
+#Accuracy
+(202+168)/370
+#TNR
+168/168
+#TPR
+202/2020
+#PPV
+202/202
+
+#AUC calculator
+library(pROC) 
+auc(Marathon$Short,probs2)
+```
+With all of the variables used, the logistic regression becomes a perfect predictor.
+
+...
+
+
+
+
+

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="Lauren Gazda" />
+    
+    <link rel="shortcut icon" type="image/x-icon" href="../../img/favicon.ico">
+    <title>Project 1: Exploratory Data Analysis</title>
+    <meta name="generator" content="Hugo 0.83.1" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="../../css/main.css" />
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:200,400,200bold,400old" />
+    
+    <!--[if lt IE 9]>
+			<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+			<script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+		<![endif]-->
+
+    
+  </head>
+
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-default">
+  <div class="container">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="../../"><i class="fa fa-home"></i></a>
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+    </div>
+    <div class="navbar-collapse collapse" id="navbar">
+      <ul class="nav navbar-nav navbar-right">
+      
+        
+        <li><a href="../../post/">BLOG</a></li>
+        
+        <li><a href="../../projects/">PROJECTS</a></li>
+        
+        <li><a href="../../resume/">RESUME</a></li>
+        
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+
+      <div class="container">
+        <div class="blog-post">
+          <h3>
+            <strong><a href="../../project/project1/">Project 1: Exploratory Data Analysis</a></strong>
+          </h3>
+        </div>
+ 
+<div class="blog-title">
+          <h4>
+         January 1, 0001 
+            &nbsp;&nbsp;
+            
+          </h4>
+        </div>
+
+        <div class="panel panel-default">
+          <div class="panel-body">
+            <div class="blogpost">
+              
+
+
+<div id="data-wrangling-and-exploration" class="section level2">
+<h2>Data Wrangling and Exploration</h2>
+<div id="lauren-gazda" class="section level4">
+<h4>Lauren Gazda</h4>
+</div>
+<div id="eid-lng673" class="section level4">
+<h4>eID: lng673</h4>
+</div>
+<div id="introduction-to-the-data" class="section level3">
+<h3>Introduction to the Data</h3>
+<p>I used to be a very athletic person. I swam competitively when I was younger and was also on the track team in high school. When I went on to college I was disappointed when I was only able to workout a couple times a week. Then just as I had signed up for a marathon in attempt to reverse my idleness and try something new, quarantine hit.</p>
+<p>After being stuck in the same room from March to September only going on walks around the neighborhood to get fresh air, I was super excited when I received an Apple Watch for my birthday. I have worn it every single day since receiving it, sometimes even while sleeping because I wanted to take advantage of all of its functions.</p>
+<p>This project was the perfect excuse to analyze my Apple Watch data through a long term lens in conjunction with data pulled from a calorie tracking app I’ve use for years called MyFitnessPal.</p>
+<p>My data spans October 2020 - March 2021. From Apple I am focusing on hours of exercise, hours of sleep, and resting heart rate. My dataset will also look at calories eaten and the corresponding meal category (Breakfast, Lunch, Dinner, or Snack) from MyFitnessPal.</p>
+</div>
+<div id="wrangling-raw-data" class="section level3">
+<h3>Wrangling Raw Data</h3>
+<div id="apple-watch-data" class="section level4">
+<h4>Apple Watch Data</h4>
+<p>The Apple Heath extraction gave me each variable I was interested in as its own dataset.</p>
+<p>The exercise minutes and sleep hours datasets contained multiple measurements per day. In order to create one <code>AppleWatch</code> dataset, I had to use <code>mutate</code>, <code>summarize</code>, and <code>group_by</code> functions from <code>dplyr</code> to to find each day’s total sum of exercise and sleep.</p>
+<pre class="r"><code># RAW EXERCISE DATA Every minute is recorded individually
+Exercise.indiv &lt;- read.csv(&quot;Exercise indiv.csv&quot;)
+head(Exercise.indiv)</code></pre>
+<pre><code>##     creationdate exercise
+## 1 10/8/2020 8:10        1
+## 2 10/8/2020 8:28        1
+## 3 10/8/2020 8:40        1
+## 4 10/8/2020 8:40        1
+## 5 10/8/2020 8:41        1
+## 6 10/8/2020 8:42        1</code></pre>
+<pre class="r"><code>library(&quot;dplyr&quot;)
+# create a day column by separating date from the
+# `creationdate` column group by day then sum exercise for
+# day
+daily_sum_ex &lt;- Exercise.indiv %&gt;% mutate(day = as.Date(creationdate, 
+    format = &quot;%m/%d/%Y&quot;)) %&gt;% group_by(day) %&gt;% summarise(total_ex = sum(exercise))
+
+# Modified Exercise Data
+head(daily_sum_ex)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   day        total_ex
+##   &lt;date&gt;        &lt;int&gt;
+## 1 2020-10-08       50
+## 2 2020-10-09       82
+## 3 2020-10-10       50
+## 4 2020-10-11       62
+## 5 2020-10-12        9
+## 6 2020-10-13        9</code></pre>
+<pre class="r"><code># RAW SLEEP DATA Moments I woke up in the middle of the night
+# created multiple measurements per sleep session
+Sleep &lt;- read.csv(&quot;~/ComputationalBio/Sleep data.csv&quot;)
+head(Sleep)</code></pre>
+<pre><code>##        startdate        enddate
+## 1 10/1/2020 0:00 10/1/2020 7:00
+## 2 10/2/2020 0:00 10/2/2020 7:00
+## 3 10/3/2020 0:00 10/3/2020 7:30
+## 4 10/4/2020 1:00 10/4/2020 7:30
+## 5 10/5/2020 0:00 10/5/2020 7:00
+## 6 10/6/2020 0:00 10/6/2020 7:30</code></pre>
+<pre class="r"><code># Separate the start time and end time from the date
+start_hour &lt;- format(as.POSIXct(strptime(Sleep$startdate, &quot;%m/%d/%Y %H:%M&quot;, 
+    tz = &quot;&quot;)), format = &quot;%H:%M&quot;)
+
+end_hour &lt;- format(as.POSIXct(strptime(Sleep$enddate, &quot;%m/%d/%Y %H:%M&quot;, 
+    tz = &quot;&quot;)), format = &quot;%H:%M&quot;)
+
+# add those time columns to dataset
+Sleep$starttime &lt;- start_hour
+Sleep$endtime &lt;- end_hour
+
+# calculate hours slept between end_hour and start_hour for
+# each entry
+Sleep$diff &lt;- difftime(as.POSIXct(Sleep$enddate, &quot;%m/%d/%Y %H:%M&quot;, 
+    tz = &quot;&quot;), as.POSIXct(Sleep$startdate, &quot;%m/%d/%Y %H:%M&quot;, tz = &quot;&quot;), 
+    units = &quot;hours&quot;)
+
+# Group by day and total the hours slept per night
+daily_sum_sl &lt;- Sleep %&gt;% mutate(day = as.Date(startdate, format = &quot;%m/%d/%Y&quot;)) %&gt;% 
+    group_by(day) %&gt;% summarise(total_sleep = sum(diff)) %&gt;% 
+    na.omit()
+
+# Modified Sleep Data
+head(daily_sum_sl)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   day        total_sleep
+##   &lt;date&gt;     &lt;drtn&gt;     
+## 1 2020-10-01 7.0 hours  
+## 2 2020-10-02 7.0 hours  
+## 3 2020-10-03 7.5 hours  
+## 4 2020-10-04 6.5 hours  
+## 5 2020-10-05 7.0 hours  
+## 6 2020-10-06 7.5 hours</code></pre>
+<p>In Resting Heart Rate to have a common ID variable I had to use <code>mutate</code> and <code>select</code> in order to separate the date from the time and create a new modified dataset. There were also some double measurements per day in this dataset, so I chose for the minimum measurement per day.</p>
+<pre class="r"><code># RAW HEART DATA gives resting heart rate (bpm) for each day
+# watch is worn
+Heart &lt;- read.csv(&quot;~/ComputationalBio/Resting Heart.csv&quot;)
+head(Heart)</code></pre>
+<pre><code>##       creationdate bpm_resting
+## 1  10/9/2020 18:56          59
+## 2 10/10/2020 20:23          64
+## 3  10/11/2020 7:45          59
+## 4 10/11/2020 19:11          57
+## 5 10/12/2020 20:09          57
+## 6 10/13/2020 22:01          58</code></pre>
+<pre class="r"><code># separate date form `creationdate` to form CommonID
+Heart &lt;- Heart %&gt;% mutate(day = as.Date(creationdate, format = &quot;%m/%d/%Y&quot;))
+
+# remove `creationdate` column in new dataset and min measure
+# per day
+rest_heart &lt;- Heart %&gt;% select(day, bpm_resting) %&gt;% group_by(day) %&gt;% 
+    summarise(bpm_resting = min(bpm_resting))
+
+# Modified Resting Heart Rate Data
+head(rest_heart)</code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   day        bpm_resting
+##   &lt;date&gt;           &lt;int&gt;
+## 1 2020-10-09          59
+## 2 2020-10-10          64
+## 3 2020-10-11          57
+## 4 2020-10-12          57
+## 5 2020-10-13          58
+## 6 2020-10-14          57</code></pre>
+<hr />
+</div>
+<div id="myfitnesspal-data" class="section level4">
+<h4>MyFitnessPal Data</h4>
+<p>I have used MyFitneessPal on and off since 2018. Using <code>filter</code> I selected for dates within the time range 10/9/2020 - 3/31/2021. I chose 10/9 as the start date because the Apple Exercise and Resting Heart Rate datasets also started then. I also utilized <code>arrange</code> to order the calories consumed in descending order while still keeping the dates in calender order.</p>
+<pre class="r"><code># RAW CALORIE DATA This dataset includes, date and time of
+# log, calories and meal category
+DietaryEnergyConsumed &lt;- read.csv(&quot;~/ComputationalBio/DietaryEnergyConsumed.csv&quot;)
+head(DietaryEnergyConsumed)</code></pre>
+<pre><code>##   unit             date   value      Meal
+## 1  Cal 12/28/2018 12:28 255.087 Breakfast
+## 2  Cal 12/28/2018 14:37 387.574     Lunch
+## 3  Cal 12/28/2018 16:06  45.649    Snacks
+## 4  Cal 12/28/2018 22:28   0.000    Dinner
+## 5  Cal 12/30/2018 21:46 156.774     Lunch
+## 6  Cal 12/30/2018 21:47 195.174 Breakfast</code></pre>
+<pre class="r"><code># separate date from log time
+DietaryEnergyConsumed &lt;- DietaryEnergyConsumed %&gt;% mutate(day = as.Date(date, 
+    format = &quot;%m/%d/%Y&quot;))
+
+# filter for 10/9/2020- 3/31/2021 and remove date+time and
+# unit columns
+MyFitPal &lt;- DietaryEnergyConsumed %&gt;% filter(day &gt;= as.Date(&quot;2020-10-09&quot;) &amp; 
+    day &lt;= as.Date(&quot;2021-03-31&quot;)) %&gt;% select(day, value, Meal)
+
+# rename value to cal
+names(MyFitPal)[2] &lt;- &quot;calories&quot;
+
+# arrange by descending calories, keep calender
+MyFitPal &lt;- MyFitPal %&gt;% arrange(day, desc(calories))
+
+# Modified Calorie Data
+head(MyFitPal)</code></pre>
+<pre><code>##          day calories      Meal
+## 1 2020-10-12  293.250 Breakfast
+## 2 2020-10-12  176.666    Dinner
+## 3 2020-10-12  130.000     Lunch
+## 4 2020-10-12   80.000    Snacks
+## 5 2020-10-14  100.000 Breakfast
+## 6 2020-10-16  920.000    Dinner</code></pre>
+</div>
+</div>
+<div id="joining-the-data" class="section level3">
+<h3>Joining the Data</h3>
+<p>In order to join all 4 datasets, I chose to group the 3 from my Apple Watch first, then join agian to the MyFitnessPal dataset.</p>
+<p>For <code>daliy_sum_ex, daily_sum_sl, and rest_heart</code> I chose a full join by <code>day</code>. The full join allowed me to keep all of the observations from each dataset, placing a <code>N/A</code> where observations were missing for a date in a certain variable. The resulting <code>AppleWatch</code> dataset has 182 days where at least one of the three variables are measured.</p>
+<pre class="r"><code># observations in each dataset
+nrow(daily_sum_ex)  # min. exercise per day</code></pre>
+<pre><code>## [1] 172</code></pre>
+<pre class="r"><code>nrow(daily_sum_sl)  # hours of sleep per night</code></pre>
+<pre><code>## [1] 177</code></pre>
+<pre class="r"><code>nrow(rest_heart)  # resting heart rate (bpm)</code></pre>
+<pre><code>## [1] 148</code></pre>
+<pre class="r"><code>nrow(MyFitPal)  # entries for all Meal types</code></pre>
+<pre><code>## [1] 247</code></pre>
+<pre class="r"><code># Apple data - full join
+Exercise_sleep &lt;- full_join(daily_sum_ex, daily_sum_sl, by = &quot;day&quot;)
+
+AppleWatch &lt;- full_join(Exercise_sleep, rest_heart, by = &quot;day&quot;)
+head(AppleWatch)</code></pre>
+<pre><code>## # A tibble: 6 x 4
+##   day        total_ex total_sleep    bpm_resting
+##   &lt;date&gt;        &lt;int&gt; &lt;drtn&gt;               &lt;int&gt;
+## 1 2020-10-08       50 7.000000 hours          NA
+## 2 2020-10-09       82 8.500000 hours          59
+## 3 2020-10-10       50 8.500000 hours          64
+## 4 2020-10-11       62 7.366667 hours          57
+## 5 2020-10-12        9 8.266667 hours          57
+## 6 2020-10-13        9 7.900000 hours          58</code></pre>
+<pre class="r"><code>n_distinct(AppleWatch$day)</code></pre>
+<pre><code>## [1] 182</code></pre>
+<p>For my final dataset, I had to join <code>AppleWatch</code> to <code>MyFitPal</code>. In order to omit days where MyFitnessPal data was not logged, I used a right join. The right join kept my descending calorie order, and modified the Apple Watch data to a multiple measure per day format. This resulted in a dataset spanning 80 distinct days, with 79 exercise, 80 sleep, and 69 resting heart rate measurements as well as 284 total calorie logs and their corresponding meal type.</p>
+<pre class="r"><code># Big Dataset - right join - drop days that have AppleWatch
+# but no MyFitPal
+Project1 &lt;- right_join(AppleWatch, MyFitPal, by = &quot;day&quot;)
+
+# transform to double
+Project1$total_sleep &lt;- as.double(Project1$total_sleep)
+head(Project1)</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   day        total_ex total_sleep bpm_resting calories Meal     
+##   &lt;date&gt;        &lt;int&gt;       &lt;dbl&gt;       &lt;int&gt;    &lt;dbl&gt; &lt;fct&gt;    
+## 1 2020-10-12        9        8.27          57     293. Breakfast
+## 2 2020-10-12        9        8.27          57     177. Dinner   
+## 3 2020-10-12        9        8.27          57     130  Lunch    
+## 4 2020-10-12        9        8.27          57      80  Snacks   
+## 5 2020-10-14       52        6.4           57     100  Breakfast
+## 6 2020-10-16       57        8.32          60     920  Dinner</code></pre>
+<pre class="r"><code>n_distinct(Project1$day)</code></pre>
+<pre><code>## [1] 80</code></pre>
+<pre class="r"><code># total measurements of each variable in Project1 dataset
+total_ex_measure &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_ex = mean(total_ex)) %&gt;% 
+    na.omit()
+nrow(total_ex_measure)</code></pre>
+<pre><code>## [1] 79</code></pre>
+<pre class="r"><code>total_sl_measure &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_sleep = mean(total_sleep)) %&gt;% 
+    na.omit()
+nrow(total_sl_measure)</code></pre>
+<pre><code>## [1] 80</code></pre>
+<pre class="r"><code>total_bpm_measure &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(bpm_resting = mean(bpm_resting)) %&gt;% 
+    na.omit()
+nrow(total_bpm_measure)</code></pre>
+<pre><code>## [1] 69</code></pre>
+<pre class="r"><code># calorie logs same as nrow Project1
+nrow(Project1)</code></pre>
+<pre><code>## [1] 247</code></pre>
+</div>
+<div id="wrangling-summary-statistics" class="section level3">
+<h3>Wrangling Summary Statistics</h3>
+<p>To look at statistical summaries for each variable in <code>Project1</code> I had to using the <code>dplyr</code> functions to find mean, sd, min, max, median, IQR, and distinct number of measurements.</p>
+<p>First I coded the overall statistics. My average exercise time was 55min, the average amount of sleep I got in a night was 6.498 hours, and my average resting heart rate for the last 6 months is 59 bpm. These variables on their own had little deviation, and I realized in the future I should keep up with my calorie tracking since the standard deviation ~400 cal for an average 1,014 cal/day, since for each day there is nott a calorie log for each meal type.</p>
+<p>Looking at categorical data, I grouped by <code>meal</code>and also created a new <code>sleep_quality</code> categorical variable based off my total sleep. I found out that I was most variable at Dinner with the highest IQR of ~299cal, and that my Snack calories is pretty similar to my Breakfast. Looking at my sleep quality, I saw that I eat more when I sleep more than 7 hours a night, which surprised me because I know I drink more coffee on bad days and I thought those would really increase my calorie intake.</p>
+<pre class="r"><code>## OVERALL
+
+# exercise data
+summary_ex &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_ex = mean(total_ex)) %&gt;% 
+    na.omit()
+summary_ex &lt;- summary_ex %&gt;% summarize(mean = mean(total_ex), 
+    sd = sd(total_ex), median = median(total_ex), min = min(total_ex), 
+    max = max(total_ex), IQR = IQR(total_ex), distinct_n = n_distinct(total_ex))
+
+# sleep data
+summary_sl &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_sleep = mean(total_sleep)) %&gt;% 
+    na.omit()
+summary_sl &lt;- summary_sl %&gt;% summarize(mean = mean(total_sleep), 
+    sd = sd(total_sleep), median = median(total_sleep), min = min(total_sleep), 
+    max = max(total_sleep), IQR = IQR(total_sleep), distinct_n = n_distinct(total_sleep))
+
+# resting heart rate data
+summary_bpm &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(resting = mean(bpm_resting)) %&gt;% 
+    na.omit()
+summary_bpm &lt;- summary_bpm %&gt;% summarize(mean = mean(resting), 
+    sd = sd(resting), median = median(resting), min = min(resting), 
+    max = max(resting), IQR = IQR(resting), distinct_n = n_distinct(resting))
+
+# calories data
+total_cal_day &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_cal = sum(calories))
+summary_cal &lt;- total_cal_day %&gt;% summarize(mean = mean(total_cal), 
+    sd = sd(total_cal), median = median(total_cal), min = min(total_cal), 
+    max = max(total_cal), IQR = IQR(total_cal), distinct_n = n_distinct(total_cal))
+
+### Join all summary of numeric stats
+sum1 &lt;- full_join(summary_ex, summary_sl)
+sum2 &lt;- full_join(sum1, summary_bpm)
+Overall_Summary &lt;- full_join(sum2, summary_cal)
+
+# Summary of all numerical data
+Overall_Summary</code></pre>
+<pre><code>## # A tibble: 4 x 7
+##      mean     sd  median   min    max    IQR distinct_n
+##     &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;      &lt;int&gt;
+## 1   55.1   32.6    59      3    144    47.5          56
+## 2    6.50   2.26    6.37   0.2   17.2   2.00         76
+## 3   59      3.71   59     50     67     4            16
+## 4 1014.   426.   1057.   100   2038.  630.           78</code></pre>
+<hr />
+<pre class="r"><code># Group By Meal Category
+cal_by_meal &lt;- Project1 %&gt;% arrange(Meal) %&gt;% group_by(Meal)
+
+# summary
+Categorical_Summary &lt;- cal_by_meal %&gt;% summarize(mean = mean(calories), 
+    sd = sd(calories), median = median(calories), min = min(calories), 
+    max = max(calories), IQR = IQR(calories), distinct_n = n_distinct(calories))
+
+# Summary of calories eaten by meal type
+Categorical_Summary</code></pre>
+<pre><code>## # A tibble: 4 x 8
+##   Meal       mean    sd median   min   max   IQR distinct_n
+##   &lt;fct&gt;     &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;int&gt;
+## 1 Breakfast  263.  153.   272.  42.4  642.  272.         47
+## 2 Dinner     497.  257.   475  139   1335   299          53
+## 3 Lunch      317.  161.   300   40.5  846   197          63
+## 4 Snacks     239.  135.   206   50.0  503.  207.         42</code></pre>
+<hr />
+<pre class="r"><code># Mutate to create new variable that is a function of another
+
+# If sleep greater than 7hrs, sleep is good If sleep less
+# than, sleep was bad
+
+sleep_pattern &lt;- Project1 %&gt;% group_by(day) %&gt;% summarize(total_ex = mean(total_ex), 
+    total_sleep = mean(total_sleep), bpm_resting = mean(bpm_resting), 
+    calorie_sum = sum(calories))
+
+sleep_pattern &lt;- sleep_pattern %&gt;% mutate(sleep_quality = ifelse(total_sleep &gt; 
+    7, &quot;good&quot;, &quot;bad&quot;))
+
+# Group By Sleep Quality Categorical
+var_by_sleepqual &lt;- sleep_pattern %&gt;% group_by(sleep_quality)
+
+# summary
+SleepQuality_Summary &lt;- var_by_sleepqual %&gt;% summarize(mean = mean(calorie_sum), 
+    sd = sd(calorie_sum), median = median(calorie_sum), min = min(calorie_sum), 
+    max = max(calorie_sum), IQR = IQR(calorie_sum), distinct_n = n_distinct(calorie_sum))
+
+# Summary of calories eaten by sleep quality
+SleepQuality_Summary</code></pre>
+<pre><code>## # A tibble: 2 x 8
+##   sleep_quality  mean    sd median   min   max   IQR distinct_n
+##   &lt;chr&gt;         &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;      &lt;int&gt;
+## 1 bad            999.  421.  1073.  100  2038.  581.         46
+## 2 good          1037.  440.  1050.  123. 1935   619.         32</code></pre>
+</div>
+<div id="tidying" class="section level3">
+<h3>Tidying</h3>
+<p>To demonstrate the use of <code>pivot_longer()/gather()</code> and <code>pivot_wider()/spread()</code> I decided to make my categorical summary datasets longer by <code>Meal</code> and <code>sleep_quality</code>.</p>
+<pre class="r"><code>library(tidyr)
+
+# Longer summary stats for calories eaten by meal
+longer_CatSum &lt;- pivot_longer(Categorical_Summary, !Meal)
+head(longer_CatSum)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   Meal      name   value
+##   &lt;fct&gt;     &lt;chr&gt;  &lt;dbl&gt;
+## 1 Breakfast mean   263. 
+## 2 Breakfast sd     153. 
+## 3 Breakfast median 272. 
+## 4 Breakfast min     42.4
+## 5 Breakfast max    642. 
+## 6 Breakfast IQR    272.</code></pre>
+<pre class="r"><code># Longer summary stats for calories eaten by sleep quality
+longer_sq &lt;- pivot_longer(SleepQuality_Summary, !sleep_quality)
+head(longer_sq)</code></pre>
+<pre><code>## # A tibble: 6 x 3
+##   sleep_quality name   value
+##   &lt;chr&gt;         &lt;chr&gt;  &lt;dbl&gt;
+## 1 bad           mean    999.
+## 2 bad           sd      421.
+## 3 bad           median 1073.
+## 4 bad           min     100 
+## 5 bad           max    2038.
+## 6 bad           IQR     581.</code></pre>
+</div>
+<div id="visualizations" class="section level3">
+<h3>Visualizations</h3>
+<div id="heatmap-of-exercise-sleep-resting-heart-rate-and-calories-eaten" class="section level4">
+<h4>Heatmap of Exercise, Sleep, Resting Heart Rate, and Calories Eaten</h4>
+<pre class="r"><code># numeric variables
+numeric_var &lt;- Project1 %&gt;% group_by(day) %&gt;% summarise(ex = mean(total_ex), 
+    sleep = mean(total_sleep), bpm = mean(bpm_resting), cal = sum(calories)) %&gt;% 
+    select(ex, sleep, bpm, cal) %&gt;% na.omit()
+
+# correlation
+cor_numvar &lt;- round(cor(numeric_var), 2)
+
+# melt
+library(reshape2)
+melt_cor_numvar &lt;- melt(cor_numvar)
+
+# heatmap with color
+library(ggplot2)
+ggplot(data = melt_cor_numvar, aes(x = Var1, y = Var2, fill = value)) + 
+    geom_tile() + scale_fill_gradient2(high = &quot;red&quot;, mid = &quot;purple&quot;, 
+    name = &quot;Pearson Coorelation&quot;) + labs(title = &quot;Heat Map of Pearsons Coorelation&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-14-1.png" width="672" style="display: block; margin: auto;" />
+The Pearson Correlation Coefficient (R) is a measure of linear strength between 2 variables in a linear relationship. Looking at this heat map between my total exercise, total sleep, resting heart rate, and total calorie data you can see that all variables are positively correlated to different degrees since the R value is greater than 0 for the entire heat map. Total exercise paired with total calories burned has the strongest relationship, being a magenta color in the 0.25&lt;R&lt;0.5 range. The next strongest relationship is between exercise and sleep because the color is more purple indicating it falls into the R&lt;0.25 range.</p>
+<hr />
+</div>
+<div id="exercise-times-vs.-sleep-resting-heart-rate-and-total-calories" class="section level4">
+<h4>Exercise Times vs. Sleep, Resting Heart Rate, and Total Calories</h4>
+<pre class="r"><code>library(ggpubr)
+
+# plot realationship between total sleep, restin heart rate,
+# and calories
+plt1 &lt;- ggplot(Project1, aes(total_ex, total_sleep)) + geom_point(color = &quot;pink&quot;) + 
+    geom_smooth(color = &quot;red&quot;) + labs(title = &quot;Total Exercise vs..&quot;) + 
+    xlab(&quot; &quot;) + ylab(&quot;Total Sleep (hrs)&quot;)
+
+plt2 &lt;- ggplot(Project1, aes(total_ex, bpm_resting)) + geom_point(color = &quot;blue&quot;) + 
+    geom_smooth(color = &quot;dark blue&quot;) + xlab(&quot; &quot;) + ylab(&quot;Resting Heart Rate (bpm)&quot;)
+
+plt3 &lt;- ggplot(Project1, aes(total_ex, calories)) + geom_point(color = &quot;green&quot;) + 
+    geom_smooth(color = &quot;dark green&quot;) + xlab(&quot;Total Exercise (min)&quot;) + 
+    ylab(&quot;Total Calories&quot;)
+
+# group and display
+figure1 &lt;- ggarrange(plt1, plt2, plt3, ncol = 1, nrow = 3)
+figure1</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-15-1.png" width="672" style="display: block; margin: auto;" />
+To further explore the relationship that daily exercise has on my data, I used <code>geom_smooth()</code> to analyze my total sleep, resting heart rate, and total calories for the day. As default the shaded region represents a 95% confidence interval. The region flares out mainly at the upper extremes since there are less measurements for all variables.</p>
+<hr />
+</div>
+<div id="bar-plot-analysis-of-sleep-quality-effects" class="section level4">
+<h4>Bar Plot Analysis of Sleep Quality Effects</h4>
+<pre class="r"><code># plot sleep quality against mean bpm, mean calories, and
+# mean exercise
+p1 &lt;- ggplot(data = var_by_sleepqual, aes(x = sleep_quality, 
+    y = bpm_resting)) + geom_bar(stat = &quot;summary&quot;, color = &quot;black&quot;, 
+    fill = c(&quot;red&quot;, &quot;purple&quot;)) + scale_y_continuous(breaks = seq(0, 
+    60, 10)) + ylab(&quot;Mean Resting Heart Rate (bpm)&quot;) + xlab(&quot;Sleep Quality&quot;)
+
+p2 &lt;- ggplot(data = var_by_sleepqual, aes(x = sleep_quality, 
+    y = calorie_sum)) + geom_bar(stat = &quot;summary&quot;, color = &quot;black&quot;, 
+    fill = c(&quot;red&quot;, &quot;purple&quot;)) + scale_y_continuous(breaks = seq(0, 
+    1100, 50)) + ylab(&quot;Mean Calories&quot;) + xlab(&quot;Sleep Quality&quot;)
+
+p3 &lt;- ggplot(data = var_by_sleepqual, aes(x = sleep_quality, 
+    y = total_ex)) + geom_bar(stat = &quot;summary&quot;, color = &quot;black&quot;, 
+    fill = c(&quot;red&quot;, &quot;purple&quot;)) + scale_y_continuous(breaks = seq(0, 
+    70, 2)) + ylab(&quot;Mean Exercise (min)&quot;) + xlab(&quot;Sleep Quality&quot;)
+
+# group and display with title
+figure2 &lt;- ggarrange(p1, p2, p3, ncol = 3, nrow = 1)
+annotate_figure(figure2, top = text_grob(&quot;Analyzing Sleep Qualtiy Effect&quot;))</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-16-1.png" width="672" style="display: block; margin: auto;" />
+Finally, to look at the effect of a categorical variable I analyzed my created Sleep Quality variable from the Wrangling Summary Statistics section. The greatest difference was in mean exercise time. I was expecting this since in the Heat Map the greatest relationships were with exercise, but I didn’t expect it to be such a difference. Adjusting the y ticks I can clearly see that in the last 6 months if I got good night of sleep (&gt;7hrs) I averaged an hour of exercise. If I had a bad night though (&lt;7hrs) I dropped to an average 52 minutes.</p>
+</div>
+</div>
+<div id="dimensionality-reduction" class="section level3">
+<h3>Dimensionality Reduction</h3>
+<p>In this step I perform PAM clustering on <code>total_exercise, total_sleep, and bpm_resting</code>.</p>
+<p>To start I had to cluster my data a determine the ideal number of clusters for my PAM analysis.</p>
+<pre class="r"><code>library(cluster)
+
+# cluster data
+clust_dat &lt;- Project1 %&gt;% select(total_ex, total_sleep, bpm_resting) %&gt;% 
+    na.omit()
+
+# find ideal number of clusters using silhouette
+
+# empty vector to hold mean sil width
+sil_width &lt;- vector()
+
+for (i in 2:10) {
+    kms &lt;- kmeans(clust_dat, centers = i)  #compute k-means solution
+    sil &lt;- silhouette(kms$cluster, dist(clust_dat))  #get sil widths
+    sil_width[i] &lt;- mean(sil[, 3])  #take averages (higher is better)
+}
+ggplot() + geom_line(aes(x = 1:10, y = sil_width)) + scale_x_continuous(name = &quot;k&quot;, 
+    breaks = 1:10)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-17-1.png" width="672" style="display: block; margin: auto;" />
+To determine the ideal number of clusters I used the silhouette method in order to analyze how cohesive and separated clusters are. Based off the graph, 3 clusters is ideal for my data since the highest value for <code>sil_width</code> is at k=3. This means the clusters are the most cohesive and most separated they can be for my data.</p>
+<p>Next, I started my PAM analysis.</p>
+<pre class="r"><code># PAM
+pam1 &lt;- clust_dat %&gt;% pam(k = 3)
+
+# save the cluster solution to dataset
+pamclust &lt;- clust_dat %&gt;% mutate(cluster = as.factor(pam1$clustering))
+
+# visualize
+pamclust %&gt;% ggplot(aes(total_ex, total_sleep, bpm_resting, calories, 
+    color = cluster)) + geom_point() + labs(title = &quot;PAM Results for 3 Clusters&quot;) + 
+    ylab(&quot;Component 2&quot;) + xlab(&quot;Component 1&quot;)</code></pre>
+<p><img src="../../project/project1_files/figure-html/unnamed-chunk-18-1.png" width="672" style="display: block; margin: auto;" /></p>
+<pre class="r"><code># find middle-most observation for each cluster
+pamclust %&gt;% group_by(cluster) %&gt;% summarize_if(is.numeric, mean, 
+    na.rm = T)</code></pre>
+<pre><code>## # A tibble: 3 x 4
+##   cluster total_ex total_sleep bpm_resting
+##   &lt;fct&gt;      &lt;dbl&gt;       &lt;dbl&gt;       &lt;dbl&gt;
+## 1 1           16.6        5.86        59.1
+## 2 2           59.4        6.84        58.7
+## 3 3          100.         6.85        59.6</code></pre>
+<p>This dataset shows the middle most observation (aka. medoid) in each cluster.</p>
+</div>
+</div>
+
+            
+        <hr>         <div class="related-posts">
+                <h5>Related Posts</h5>
+                
+              </div> 
+            </div>
+          </div>
+
+   <hr>  <div class="disqus">
+  <div id="disqus_thread"></div>
+  <script type="text/javascript">
+
+    (function() {
+      
+      
+      if (window.location.hostname == "localhost")
+        return;
+
+      var disqus_shortname = '';
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+  </script>
+  <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+  <a href="http://disqus.com/" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div> 
+        </div>
+      </div>
+    </div>
+
+    
+    <footer>
+  <div id="footer">
+    <div class="container">
+      <p class="text-muted">&copy; All rights reserved. Powered by <a href="https://gohugo.io/">Hugo</a> and
+      <a href="http://www.github.com/nurlansu/hugo-sustain/">sustain</a> with ♥</p>
+    </div>
+  </div>
+</footer>
+<div class="footer"></div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="../../js/docs.min.js"></script>
+<script src="../../js/main.js"></script>
+
+<script src="../../js/ie10-viewport-bug-workaround.js"></script>
+
+
+    
+  </body>
+</html>
